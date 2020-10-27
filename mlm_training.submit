@@ -1,0 +1,26 @@
+Universe = vanilla
+Executable = /home/wallat/miniconda3/envs/knowledge-probing/bin/python3.7
+Arguments = /home/wallat/squad_mlm/squad-training/run_mlm_training.py \
+                --gpus 1 \
+                --train_file /home/wallat/squad_mlm/data/train-v2.0.json  \
+                --eval_file /home/wallat/squad_mlm/data/dev-v2.0.json \
+                --model_save_path /home/wallat/squad_mlm/models/mlm_stable/training_lens/ \
+                --learning_rate 5e-6 \
+                --max_epochs=10 \
+                --use_wandb_logging \
+                --wandb_project_name=training_lengths_squad \
+                --wandb_run_name train_for_10 \
+                --python_executable=/home/wallat/miniconda3/envs/knowledge-probing/bin/python3.7
+
+input = /dev/null
+
+output = /home/wallat/squad_mlm/models/mlm_stable/training_lens/condor_out/run.out
+error = /home/wallat/squad_mlm/models/mlm_stable/training_lens/condor_out/run.error
+
+stream_output = True
+stream_error = True
+
+
+REQUEST_GPUs = 1
+
+Queue 

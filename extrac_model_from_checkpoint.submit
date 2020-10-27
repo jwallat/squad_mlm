@@ -1,0 +1,17 @@
+Universe = vanilla
+Executable = /home/wallat/miniconda3/envs/knowledge-probing/bin/python3.7
+Arguments = /home/wallat/squad_mlm/squad-training/extract_model_from_checkpoint.py
+
+
+input = /dev/null
+
+output = /home/wallat/squad_mlm/condor_out/extrac_checkpoint.out
+error = /home/wallat/squad_mlm/condor_out/extrac_checkpoint.error
+
+stream_output = True
+stream_error = True
+
+
+REQUEST_GPUs = 1
+
+Queue

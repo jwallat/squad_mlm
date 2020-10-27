@@ -1,7 +1,7 @@
 import os
 import torch
 from torch.utils.data import DataLoader
-from transformers import AutoModelWithLMHead, AutoTokenizer, AdamW
+from transformers import AutoModelWithLMHead, AutoTokenizer, AdamW, get_linear_schedule_with_warmup
 import pytorch_lightning as pl
 from squad_training.datasets.mlm_dataset import MLMDataset
 from squad_training.datasets.mlm_dataset_utils import collate, mask_tokens
@@ -14,9 +14,13 @@ class MarcoMLM(pl.LightningModule):
 
         self.args = args
 
-        self.model = AutoModelWithLMHead.from_pretrained(args.bert_model_type)
+        self.model = AutoModelWithLMHead.from_pretrained(
+            self.args.bert_model_type)
         self.model.train()
-        self.tokenizer = AutoTokenizer.from_pretrained(args.bert_model_type)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            self.args.bert_model_type)
+
+        self.epoch_counter = 0
 
     def forward(self, input_ids, masked_lm_labels, attention_masks):
 
@@ -56,6 +60,14 @@ class MarcoMLM(pl.LightningModule):
         # OPTIONAL
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
         tensorboard_logs = {'val_loss': avg_loss}
+
+        # Save model checkpoint
+        self.epoch_counter = self.epoch_counter + 1
+        epoch_save_dir = '{}{}/'.format(self.args.model_save_path,
+                                        self.epoch_counter)
+        os.mkdir(epoch_save_dir)
+        self.model.save_pretrained(epoch_save_dir)
+
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
 
     # def test_step(self, batch, batch_idx):
@@ -76,7 +88,10 @@ class MarcoMLM(pl.LightningModule):
         adam = AdamW([p for p in self.parameters() if p.requires_grad],
                      lr=self.args.learning_rate, eps=1e-08)
 
-        return adam
+        scheduler = get_linear_schedule_with_warmup(
+            adam, num_warmup_steps=(17800), num_training_steps=17810*10)
+
+        return [adam], [{"scheduler": scheduler, "interval": "step"}]
 
     def prepare_data(self):
         self.train_dataset = MLMDataset(
